@@ -30,6 +30,24 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Minimal CSS to override dark mode - only what's needed
+st.markdown("""
+<style>
+    /* Force light backgrounds */
+    .stApp {
+        background-color: #f5f7fa;
+    }
+    section[data-testid="stSidebar"] {
+        background-color: #ffffff;
+    }
+    
+    /* Ensure text is dark (not white) */
+    .stApp, .stApp * {
+        color: #262730;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # Header with logo
 col_logo, col_title = st.columns([1, 8])
 with col_logo:
