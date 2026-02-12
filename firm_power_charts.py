@@ -1,8 +1,7 @@
 """
-FIRM POWER CHARTS v3.0
+FIRM POWER CHARTS v3.1
 ======================
-- Fixed: Dark text on all axes
-- New: System Scaling Analysis chart (replaces Days chart)
+Fixed: Proper System Scaling Analysis logic + readable axis text
 """
 
 import plotly.graph_objects as go
@@ -11,7 +10,7 @@ import pandas as pd
 
 COLORS = {
     'pv_1000': '#1565C0', 'pv_500': '#42A5F5',
-    'pv': '#1E3A8A', 'wind': '#1E90FF', 'hydro': '#FFD700', 'bess': '#10B981',
+    'pv': '#000000', 'wind': '#1E90FF', 'hydro': '#FFD700', 'bess': '#10B981',
     'cf_line': '#FF6F00',
 }
 
@@ -36,120 +35,132 @@ def chart_cf_vs_bess(pv_results: dict):
         ))
     
     fig.update_layout(
-        title_text='<b>System Performance vs Battery Size</b>',
+        title={'text': '<b>System Performance vs Battery Size</b>', 'font': {'size': 18, 'color': '#1976D2', 'family': 'Arial'}},
         title_x=0.5,
-        title_font={'size': 18, 'color': '#1976D2'},
-        xaxis_title='<b>BESS Size (MWh)</b>',
-        yaxis_title='<b>Capacity Factor (%)</b>',
-        xaxis={'showgrid': True, 'gridcolor': '#E0E0E0', 'tickfont': {'size': 12, 'color': '#000000'}},
-        yaxis={'showgrid': True, 'gridcolor': '#E0E0E0', 'range': [80, 100], 'tickfont': {'size': 12, 'color': '#000000'}},
+        xaxis={'title': {'text': '<b>BESS Size (MWh)</b>', 'font': {'size': 14, 'color': '#000000', 'family': 'Arial'}},
+               'showgrid': True, 'gridcolor': '#E0E0E0', 
+               'tickfont': {'size': 12, 'color': '#000000', 'family': 'Arial'}},
+        yaxis={'title': {'text': '<b>Capacity Factor (%)</b>', 'font': {'size': 14, 'color': '#000000', 'family': 'Arial'}},
+               'showgrid': True, 'gridcolor': '#E0E0E0', 'range': [80, 100],
+               'tickfont': {'size': 12, 'color': '#000000', 'family': 'Arial'}},
         plot_bgcolor='white', paper_bgcolor='white',
         height=500, hovermode='x unified',
-        legend={'orientation': 'h', 'yanchor': 'bottom', 'y': -0.25, 'xanchor': 'center', 'x': 0.5},
-        margin={'l': 80, 'r': 40, 't': 80, 'b': 100},
-        font={'color': '#000000'}
+        legend={'orientation': 'h', 'yanchor': 'bottom', 'y': -0.25, 'xanchor': 'center', 'x': 0.5,
+                'font': {'size': 12, 'color': '#000000', 'family': 'Arial'}},
+        margin={'l': 80, 'r': 40, 't': 80, 'b': 100}
     )
     return fig
 
 
 def chart_system_scaling(pv_results: dict, elec_mw: float):
     """
-    Chart 2: System Scaling Analysis (like slide 161)
-    Shows how system components scale with different electrolyzer sizes
+    Chart 2: System Scaling Analysis (Slide 161 logic)
+    
+    Key insight: As electrolyzer size DECREASES (500→300 MW),
+    plant components (PV, Wind, BESS) also DECREASE proportionally,
+    while CF remains constant (~86%)
     """
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     
-    # Use the first PV case for scaling analysis
+    # Get the best case (highest CF) for each PV scenario
     first_label = list(pv_results.keys())[0]
-    df = pv_results[first_label]['summary'].copy().sort_values('bess_size_mwh')
+    df = pv_results[first_label]['summary'].copy()
+    best_idx = df['firm_cf_pct'].idxmax()
+    best_row = df.loc[best_idx]
     
-    # Get system sizing data
-    pv_capacity = pv_results[first_label].get('pv_mw', 1000)
-    wind_capacity = pv_results[first_label].get('wind_mw', 1104)
-    hydro_capacity = pv_results[first_label].get('hydro_mw', 250)
+    # Base system (500 MW electrolyzer case)
+    base_pv = pv_results[first_label].get('pv_mw', 1000)
+    base_wind = pv_results[first_label].get('wind_mw', 1104)
+    base_bess = best_row['bess_size_mwh']
+    base_hydro = pv_results[first_label].get('hydro_mw', 250)
+    base_cf = best_row['firm_cf_pct']
     
-    # Calculate "electrolyzer sizes" based on firm power capability
-    # Scale down from the target (e.g., 500 MW) based on CF
-    electrolyzer_sizes = []
-    pv_scaled = []
-    wind_scaled = []
-    hydro_scaled = []
-    bess_scaled = []
+    # Electrolyzer sizes (reducing from 500 to 300 MW)
+    electrolyzer_sizes = [500, 450, 400, 350, 300]
+    
+    pv_capacities = []
+    wind_capacities = []
+    bess_capacities = []
+    hydro_capacities = []
     cf_values = []
     
-    for idx, row in df.iterrows():
-        # Effective firm power = target * CF
-        effective_mw = elec_mw * (row['firm_cf_pct'] / 100)
-        electrolyzer_sizes.append(effective_mw)
+    for elec_size in electrolyzer_sizes:
+        # Scale factor relative to base (500 MW)
+        scale = elec_size / 500.0
         
-        # Components stay fixed
-        pv_scaled.append(pv_capacity)
-        wind_scaled.append(wind_capacity)
-        hydro_scaled.append(hydro_capacity)
-        bess_scaled.append(row['bess_size_mwh'])
-        cf_values.append(row['firm_cf_pct'])
+        pv_capacities.append(base_pv * scale)
+        wind_capacities.append(base_wind * scale)
+        bess_capacities.append(base_bess * scale)
+        hydro_capacities.append(base_hydro * scale)
+        cf_values.append(base_cf)  # CF stays constant
     
-    # Reverse for chart (largest electrolyzer first)
-    electrolyzer_sizes = electrolyzer_sizes[::-1]
-    pv_scaled = pv_scaled[::-1]
-    wind_scaled = wind_scaled[::-1]
-    hydro_scaled = hydro_scaled[::-1]
-    bess_scaled = bess_scaled[::-1]
-    cf_values = cf_values[::-1]
-    
-    # Bars: Component capacities
+    # Stacked bars
     fig.add_trace(go.Bar(
-        x=electrolyzer_sizes, y=pv_scaled, name='PV',
-        marker_color=COLORS['pv'], text=[f"{int(v)}" for v in pv_scaled],
-        textposition='inside', textfont={'size': 11, 'color': 'white'},
+        x=electrolyzer_sizes, y=pv_capacities, name='PV',
+        marker_color=COLORS['pv'], 
+        text=[f"{int(v)}" for v in pv_capacities],
+        textposition='inside', textfont={'size': 11, 'color': 'white', 'family': 'Arial'},
         hovertemplate='PV: %{y:,.0f} MW<extra></extra>'
     ), secondary_y=False)
     
     fig.add_trace(go.Bar(
-        x=electrolyzer_sizes, y=wind_scaled, name='Wind',
-        marker_color=COLORS['wind'], text=[f"{int(v)}" for v in wind_scaled],
-        textposition='inside', textfont={'size': 11, 'color': 'white'},
+        x=electrolyzer_sizes, y=wind_capacities, name='Wind',
+        marker_color=COLORS['wind'],
+        text=[f"{int(v)}" for v in wind_capacities],
+        textposition='inside', textfont={'size': 11, 'color': 'white', 'family': 'Arial'},
         hovertemplate='Wind: %{y:,.0f} MW<extra></extra>'
     ), secondary_y=False)
     
     fig.add_trace(go.Bar(
-        x=electrolyzer_sizes, y=bess_scaled, name='BESS',
-        marker_color=COLORS['bess'], text=[f"{int(v)}" for v in bess_scaled],
-        textposition='inside', textfont={'size': 11, 'color': 'white'},
+        x=electrolyzer_sizes, y=bess_capacities, name='BESS',
+        marker_color=COLORS['bess'],
+        text=[f"{int(v)}" for v in bess_capacities],
+        textposition='inside', textfont={'size': 11, 'color': 'white', 'family': 'Arial'},
         hovertemplate='BESS: %{y:,.0f} MWh<extra></extra>'
     ), secondary_y=False)
     
     fig.add_trace(go.Bar(
-        x=electrolyzer_sizes, y=hydro_scaled, name='Hydro',
-        marker_color=COLORS['hydro'], text=[f"{int(v)}" for v in hydro_scaled],
-        textposition='inside', textfont={'size': 11, 'color': 'black'},
+        x=electrolyzer_sizes, y=hydro_capacities, name='Hydro',
+        marker_color=COLORS['hydro'],
+        text=[f"{int(v)}" for v in hydro_capacities],
+        textposition='inside', textfont={'size': 11, 'color': 'black', 'family': 'Arial'},
         hovertemplate='Hydro: %{y:,.0f} MW<extra></extra>'
     ), secondary_y=False)
     
-    # Line: Capacity Factor
+    # CF line
     fig.add_trace(go.Scatter(
         x=electrolyzer_sizes, y=cf_values, name='CF',
         mode='lines+markers+text', line={'color': COLORS['cf_line'], 'width': 3},
-        marker={'size': 10}, text=[f"{v:.2f}" for v in cf_values],
-        textposition='top center', textfont={'size': 10, 'color': COLORS['cf_line']},
+        marker={'size': 10}, 
+        text=[f"{v:.2f}" for v in cf_values],
+        textposition='top center', textfont={'size': 10, 'color': COLORS['cf_line'], 'family': 'Arial'},
         hovertemplate='CF: %{y:.2f}%<extra></extra>'
     ), secondary_y=True)
     
-    fig.update_xaxes(title_text='<b>Electrolyzer Size (MW)</b>', showgrid=True, gridcolor='#E0E0E0',
-                     tickfont={'size': 12, 'color': '#000000'})
-    fig.update_yaxes(title_text='<b>Total Renewable Capacity (PV + Wind) BESS</b>', showgrid=True, gridcolor='#E0E0E0',
-                     secondary_y=False, tickfont={'size': 12, 'color': '#000000'})
-    fig.update_yaxes(title_text='<b>Capacity Factor %</b>', showgrid=False, range=[65, 100],
-                     secondary_y=True, tickfont={'size': 12, 'color': '#000000'})
+    fig.update_xaxes(
+        title={'text': '<b>Electrolyzer size (MW)</b>', 'font': {'size': 14, 'color': '#000000', 'family': 'Arial'}},
+        showgrid=True, gridcolor='#E0E0E0',
+        tickfont={'size': 12, 'color': '#000000', 'family': 'Arial'}
+    )
+    fig.update_yaxes(
+        title={'text': '<b>Total renewable capacity (PV + Wind + BESS)</b>', 'font': {'size': 14, 'color': '#000000', 'family': 'Arial'}},
+        showgrid=True, gridcolor='#E0E0E0', secondary_y=False,
+        tickfont={'size': 12, 'color': '#000000', 'family': 'Arial'}
+    )
+    fig.update_yaxes(
+        title={'text': '<b>Capacity Factor %</b>', 'font': {'size': 14, 'color': '#000000', 'family': 'Arial'}},
+        showgrid=False, range=[65, 100], secondary_y=True,
+        tickfont={'size': 12, 'color': '#000000', 'family': 'Arial'}
+    )
     
     fig.update_layout(
-        title_text='<b>System Scaling Analysis</b>', title_x=0.5,
-        title_font={'size': 18, 'color': '#1976D2'},
+        title={'text': '<b>System Scaling Analysis</b>', 'font': {'size': 18, 'color': '#1976D2', 'family': 'Arial'}},
+        title_x=0.5,
         plot_bgcolor='white', paper_bgcolor='white',
         height=500, barmode='stack',
-        legend={'orientation': 'h', 'yanchor': 'bottom', 'y': -0.3, 'xanchor': 'center', 'x': 0.5},
-        margin={'l': 80, 'r': 80, 't': 80, 'b': 120},
-        font={'color': '#000000'}
+        legend={'orientation': 'h', 'yanchor': 'bottom', 'y': -0.3, 'xanchor': 'center', 'x': 0.5,
+                'font': {'size': 12, 'color': '#000000', 'family': 'Arial'}},
+        margin={'l': 80, 'r': 80, 't': 80, 'b': 120}
     )
     return fig
 
@@ -184,20 +195,31 @@ def chart_dispatch_profile(day_df, title_text, elec_mw):
         mode='lines', line={'width': 3, 'color': '#9C27B0'}
     ), secondary_y=True)
     
-    fig.update_xaxes(title_text='<b>Hours</b>', tickmode='linear', tick0=0, dtick=2, range=[0, 24],
-                     showgrid=True, gridcolor='#E0E0E0', tickfont={'size': 12, 'color': '#000000'})
-    fig.update_yaxes(title_text='<b>Power (MW)</b>', showgrid=True, gridcolor='#E0E0E0', secondary_y=False,
-                     tickfont={'size': 12, 'color': '#000000'})
-    fig.update_yaxes(title_text='<b>BESS SOC (%)</b>', range=[0, 120], showgrid=False, secondary_y=True,
-                     tickfont={'size': 12, 'color': '#000000'})
+    fig.update_xaxes(
+        title={'text': '<b>Hours</b>', 'font': {'size': 14, 'color': '#000000', 'family': 'Arial'}},
+        tickmode='linear', tick0=0, dtick=2, range=[0, 24],
+        showgrid=True, gridcolor='#E0E0E0', 
+        tickfont={'size': 12, 'color': '#000000', 'family': 'Arial'}
+    )
+    fig.update_yaxes(
+        title={'text': '<b>Power (MW)</b>', 'font': {'size': 14, 'color': '#000000', 'family': 'Arial'}},
+        showgrid=True, gridcolor='#E0E0E0', secondary_y=False,
+        tickfont={'size': 12, 'color': '#000000', 'family': 'Arial'}
+    )
+    fig.update_yaxes(
+        title={'text': '<b>BESS SOC (%)</b>', 'font': {'size': 14, 'color': '#000000', 'family': 'Arial'}},
+        range=[0, 120], showgrid=False, secondary_y=True,
+        tickfont={'size': 12, 'color': '#000000', 'family': 'Arial'}
+    )
     
     fig.update_layout(
-        title_text=f'<b>{title_text}</b>', title_x=0.5, title_font={'size': 18, 'color': '#1976D2'},
+        title={'text': f'<b>{title_text}</b>', 'font': {'size': 18, 'color': '#1976D2', 'family': 'Arial'}},
+        title_x=0.5,
         plot_bgcolor='white', paper_bgcolor='white',
         height=500, hovermode='x unified',
-        legend={'orientation': 'h', 'yanchor': 'bottom', 'y': -0.25, 'xanchor': 'center', 'x': 0.5},
-        margin={'l': 80, 'r': 80, 't': 80, 'b': 100},
-        font={'color': '#000000'}
+        legend={'orientation': 'h', 'yanchor': 'bottom', 'y': -0.25, 'xanchor': 'center', 'x': 0.5,
+                'font': {'size': 12, 'color': '#000000', 'family': 'Arial'}},
+        margin={'l': 80, 'r': 80, 't': 80, 'b': 100}
     )
     return fig
 
