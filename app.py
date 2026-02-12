@@ -15,8 +15,7 @@ from firm_power_dispatch import (
     run_pv_sensitivity, get_representative_days
 )
 from firm_power_charts import (
-    chart_dispatch_profile, chart_cf_vs_bess, chart_days_vs_bess,
-    chart_curtailment_vs_bess, chart_baseline_without_bess,
+    chart_dispatch_profile, chart_cf_vs_bess, chart_system_scaling,
     build_summary_table
 )
 
@@ -509,12 +508,12 @@ with tab_results:
         st.markdown("---")
         
         # ══════════════════════════════════════════════════════════════════════
-        # CHART 2: Full-Power Operation Days
+        # CHART 2: System Scaling Analysis
         # ══════════════════════════════════════════════════════════════════════
-        st.subheader("🏗️ Full-Power Operation Days")
-        st.caption("Days per year with continuous 24-hour full power operation and total operating hours")
-        fig_days = chart_days_vs_bess(pv_results)
-        st.plotly_chart(fig_days, use_container_width=True, key='chart_days_vs_bess')
+        st.subheader("🏗️ System Scaling Analysis")
+        st.caption("How renewable system components scale with effective electrolyzer capacity")
+        fig_scaling = chart_system_scaling(pv_results, elec_mw)
+        st.plotly_chart(fig_scaling, use_container_width=True, key='chart_system_scaling')
         
         st.markdown("---")
         
