@@ -168,7 +168,7 @@ st.markdown("""
 st.markdown("""
 <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:4px">
     <svg width="52" height="52" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
-        <rect width="52" height="52" rx="8" fill="#0047AB"/>
+        <rect width="52" height="52" rx="0" fill="#0047AB"/>
         <text x="18" y="38" font-family="Arial,sans-serif" font-size="32"
               font-weight="bold" fill="white" text-anchor="middle">S</text>
         <text x="36" y="37" font-family="Arial,sans-serif" font-size="18"
