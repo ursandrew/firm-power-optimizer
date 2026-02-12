@@ -30,49 +30,118 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS - Match Energy Modeling Optimizer background + Fix sidebar visibility
+# Force light theme via config
+st.markdown("""
+<script>
+    // Force light theme
+    window.localStorage.setItem('theme', 'light');
+</script>
+""", unsafe_allow_html=True)
+
+# Custom CSS - AGGRESSIVE fixes for visibility
 st.markdown("""
 <style>
-    /* Force light theme */
+    /* ========== FORCE LIGHT THEME ========== */
     .main {
-        background-color: #f5f7fa;
+        background-color: #f5f7fa !important;
     }
     .stApp {
-        background-color: #f5f7fa;
+        background-color: #f5f7fa !important;
     }
     
-    /* Fix sidebar - light background with dark text */
-    [data-testid="stSidebar"] {
-        background-color: #ffffff;
+    /* ========== SIDEBAR FIX - WHITE BACKGROUND ========== */
+    section[data-testid="stSidebar"] {
+        background-color: #ffffff !important;
     }
-    [data-testid="stSidebar"] * {
-        color: #333333 !important;
+    section[data-testid="stSidebar"] > div {
+        background-color: #ffffff !important;
     }
-    [data-testid="stSidebar"] h1,
-    [data-testid="stSidebar"] h2,
-    [data-testid="stSidebar"] h3,
-    [data-testid="stSidebar"] h4 {
+    
+    /* Force all sidebar text to be dark */
+    section[data-testid="stSidebar"] * {
+        color: #1a1a1a !important;
+    }
+    section[data-testid="stSidebar"] .stMarkdown {
+        color: #1a1a1a !important;
+    }
+    section[data-testid="stSidebar"] p {
+        color: #1a1a1a !important;
+    }
+    section[data-testid="stSidebar"] label {
+        color: #1a1a1a !important;
+    }
+    
+    /* Sidebar headers in blue */
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3,
+    section[data-testid="stSidebar"] h4 {
         color: #1976D2 !important;
     }
     
-    /* Headers */
-    h1, h2, h3 {
-        color: #1976D2;
+    /* Expanders in sidebar - light gray background */
+    section[data-testid="stSidebar"] .streamlit-expanderHeader {
+        background-color: #f0f2f6 !important;
+        color: #1a1a1a !important;
+        font-weight: 600 !important;
+    }
+    section[data-testid="stSidebar"] details {
+        background-color: #ffffff !important;
+    }
+    
+    /* Text areas and inputs in sidebar */
+    section[data-testid="stSidebar"] textarea {
+        background-color: #ffffff !important;
+        color: #1a1a1a !important;
+        border: 1px solid #cccccc !important;
+    }
+    section[data-testid="stSidebar"] input {
+        background-color: #ffffff !important;
+        color: #1a1a1a !important;
+    }
+    
+    /* ========== MAIN CONTENT - DARK TEXT ON LIGHT ========== */
+    .main .block-container {
+        background-color: #f5f7fa !important;
+    }
+    
+    /* All text in main content area should be dark */
+    .main h1, .main h2, .main h3, .main h4, .main h5, .main h6 {
+        color: #1976D2 !important;
+    }
+    .main p, .main li, .main span, .main div {
+        color: #1a1a1a !important;
+    }
+    .main .stMarkdown {
+        color: #1a1a1a !important;
+    }
+    
+    /* Tab labels - make visible */
+    button[data-baseweb="tab"] {
+        color: #1a1a1a !important;
+        font-size: 1rem !important;
+    }
+    button[data-baseweb="tab"][aria-selected="true"] {
+        color: #1976D2 !important;
+        font-weight: 600 !important;
     }
     
     /* Metric cards */
     .metric-card {
-        background: white;
+        background: white !important;
         padding: 1rem;
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
-    /* Expander styling in sidebar */
-    [data-testid="stSidebar"] .streamlit-expanderHeader {
-        background-color: #f0f2f6;
-        color: #333333 !important;
-        font-weight: 600;
+    /* Success/Info/Warning boxes - dark text */
+    .stSuccess, .stInfo, .stWarning {
+        color: #1a1a1a !important;
+    }
+    
+    /* Captions - darker gray for visibility */
+    .stCaption {
+        color: #555555 !important;
     }
 </style>
 """, unsafe_allow_html=True)
