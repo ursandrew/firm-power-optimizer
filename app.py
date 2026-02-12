@@ -1,8 +1,8 @@
 """
-FIRM POWER OPTIMIZATION TOOL v2.0
+FIRM POWER OPTIMIZATION TOOL v2.1
 ==================================
-Styled to match Energy Modeling Optimizer
-UX improvements: organized sidebar, search space display, 2-chart results
+Styled to match Energy Modeling Optimizer with SJ logo
+Fixed: StreamlitDuplicateElementId error with unique button keys
 """
 
 import streamlit as st
@@ -21,7 +21,7 @@ from firm_power_charts import (
 )
 
 # ══════════════════════════════════════════════════════════════════════════════
-# PAGE CONFIG - Energy Modeling Optimizer Style
+# PAGE CONFIG
 # ══════════════════════════════════════════════════════════════════════════════
 st.set_page_config(
     page_title="Firm Power Optimization",
@@ -162,12 +162,22 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Header
-st.markdown(
-    '<p style="font-size:2.2rem;font-weight:bold;color:#1976D2;margin-bottom:5px">'
-    '⚡ Firm Power Optimization Tool</p>',
-    unsafe_allow_html=True
-)
+# ══════════════════════════════════════════════════════════════════════════════
+# SJ LOGO + HEADER
+# ══════════════════════════════════════════════════════════════════════════════
+st.markdown("""
+<div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:4px">
+    <svg width="52" height="52" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+        <rect width="52" height="52" rx="8" fill="#0047AB"/>
+        <text x="26" y="36" font-family="Arial,sans-serif" font-size="22"
+              font-weight="bold" fill="white" text-anchor="middle">SJ</text>
+        <circle cx="38" cy="13" r="5" fill="#E63946"/>
+    </svg>
+    <p style="font-size:2.2rem;font-weight:bold;color:#1976D2;margin:0">
+        Firm Power Optimization Tool
+    </p>
+</div>
+""", unsafe_allow_html=True)
 st.caption("Hybrid Renewable Energy System Analysis: PV + Wind + Hydro + Battery Storage")
 
 st.markdown("---")
@@ -177,7 +187,7 @@ if 'analysis_complete' not in st.session_state:
     st.session_state.analysis_complete = False
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SIDEBAR - ORGANIZED BY COMPONENT (Like Energy Modeling Optimizer)
+# SIDEBAR - ORGANIZED BY COMPONENT
 # ══════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown("### 🔧 System Configuration")
@@ -320,10 +330,44 @@ tab_home, tab_run, tab_results, tab_dispatch = st.tabs([
 with tab_home:
     st.header("Firm Power Optimization Tool")
     
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("""
+        ### 🎯 Purpose
+        Assess Battery Energy Storage sizing for firm power delivery from hybrid renewable system:
+        - **Hydro**: 250 MW baseload (24/7)
+        - **PV**: Variable (500–1,000 MW sensitivity)
+        - **Wind**: Variable (~1,104 MW)
+        - **BESS**: Sensitivity sweep (500–3,500 MWh)
+
+        ### 📐 Three-Tier Dispatch
+        | Tier | Condition | Output |
+        |------|-----------|--------|
+        | **FIRM** | Hydro+RE+BESS ≥ Target | Full firm power |
+        | **SUPPLEMENTAL** | Hydro ≥ 250 MW | Hydro only |
+        | **SHUTDOWN** | Hydro < 250 MW | Zero |
+        """)
+    with col2:
+        st.markdown("""
+        ### 📊 Outputs
+        - Capacity Factor % vs BESS size
+        - Days with 24h full operation vs BESS
+        - Curtailment % vs BESS size
+        - Typical & low-renewable dispatch profiles
+        - Baseline performance (no BESS)
+        - Full hourly dispatch download
+
+        ### 📁 Required Inputs
+        | File | Format |
+        |------|--------|
+        | PV Profile | CSV/XLSX, 8760 hrs |
+        | Wind Profile | CSV/XLSX, 8760 hrs |
+        """)
+    
     st.markdown("---")
     
     # ══════════════════════════════════════════════════════════════════════════
-    # SEARCH SPACE DISPLAY (Like Energy Modeling Optimizer)
+    # SEARCH SPACE DISPLAY
     # ══════════════════════════════════════════════════════════════════════════
     st.markdown("### 🔍 System Overview")
     
@@ -335,26 +379,17 @@ with tab_home:
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("Solar PV Scenarios", pv_options, f"{min(pv_cases.values()):.0f}-{max(pv_cases.values()):.0f} MW")
-        st.markdown('</div>', unsafe_allow_html=True)
     with col2:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("Wind Capacity", f"{wind_capacity:.0f} MW")
-        st.markdown('</div>', unsafe_allow_html=True)
     with col3:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("Hydro Baseload", f"{hydro_mw:.0f} MW")
-        st.markdown('</div>', unsafe_allow_html=True)
     with col4:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("Battery Sizes Tested", bess_options, f"{min(bess_sizes):.0f}-{max(bess_sizes):.0f} MWh")
-        st.markdown('</div>', unsafe_allow_html=True)
     
     st.info(f"**Total Analysis Cases:** {total_combinations:,} scenarios "
             f"({pv_options} solar scenarios × {bess_options} battery sizes)")
     
-    st.markdown("**System Configuration:**")
     st.success(f"☀️ Solar PV + 💨 Wind + 💧 Hydro + 🔋 Battery Storage")
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -394,7 +429,8 @@ with tab_run:
             "▶️ RUN ANALYSIS",
             type="primary",
             disabled=not can_run,
-            use_container_width=True
+            use_container_width=True,
+            key="run_analysis_btn"
         )
     
     if run_btn:
@@ -513,7 +549,7 @@ with tab_results:
         st.subheader("📥 Download Results")
         col1, col2, col3 = st.columns([2, 1, 2])
         with col2:
-            if st.button("📥 Prepare Excel", type="primary", use_container_width=True):
+            if st.button("📥 Prepare Excel", type="primary", use_container_width=True, key="prepare_excel_btn"):
                 with st.spinner("Building Excel report..."):
                     out = BytesIO()
                     with pd.ExcelWriter(out, engine='openpyxl') as writer:
@@ -545,7 +581,8 @@ with tab_results:
                     file_name="firm_power_analysis.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     use_container_width=True,
-                    type="secondary"
+                    type="secondary",
+                    key="download_excel_btn"
                 )
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -625,233 +662,8 @@ with tab_dispatch:
 st.markdown("---")
 st.markdown(
     '<div style="text-align:center;color:#999;font-size:0.9rem">'
-    'Firm Power Optimization Tool v2.0 | HSO Team | '
+    'Firm Power Optimization Tool v2.1 | HSO Team | '
     'Powered by Python + Streamlit'
     '</div>',
     unsafe_allow_html=True
 )
-
-with tab_home:
-    st.header("Firm Power Optimization Tool")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("""
-        ### 🎯 Purpose
-        Assess Battery Energy Storage sizing for firm power delivery from hybrid renewable system:
-        - **Hydro**: 250 MW baseload (24/7)
-        - **PV**: Variable (500–1,000 MW sensitivity)
-        - **Wind**: Variable (~1,104 MW)
-        - **BESS**: Sensitivity sweep (500–3,500 MWh)
-
-        ### 📐 Three-Tier Dispatch
-        | Tier | Condition | Output |
-        |------|-----------|--------|
-        | **FIRM** | Hydro+RE+BESS ≥ Target | Full firm power |
-        | **SUPPLEMENTAL** | Hydro ≥ 250 MW | Hydro only |
-        | **SHUTDOWN** | Hydro < 250 MW | Zero |
-        """)
-    with col2:
-        st.markdown("""
-        ### 📊 Outputs
-        - Capacity Factor % vs BESS size
-        - Days with 24h full operation vs BESS
-        - Curtailment % vs BESS size
-        - Typical & low-renewable dispatch profiles
-        - Baseline performance (no BESS)
-        - Full hourly dispatch download
-
-        ### 📁 Required Inputs
-        | File | Format |
-        |------|--------|
-        | PV Profile | CSV/XLSX, 8760 hrs |
-        | Wind Profile | CSV/XLSX, 8760 hrs |
-        """)
-    st.info("Configure in sidebar → Run Analysis")
-
-with tab_run:
-    st.header("⚙️ Run Configuration")
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Firm Power", f"{elec_mw} MW")
-    with col2:
-        st.metric("Hydro", f"{hydro_mw} MW")
-    with col3:
-        st.metric("BESS Scenarios", len(bess_sizes))
-    with col4:
-        st.metric("PV Cases", len(pv_cases))
-
-    st.markdown(f"**BESS sweep:** {', '.join([f'{int(b):,} MWh' for b in bess_sizes])}")
-    st.markdown("**PV cases:**")
-    for lbl, mw in pv_cases.items():
-        st.write(f"- {lbl}: {mw:,.0f} MW")
-    st.markdown("---")
-
-    if run_btn:
-        try:
-            def read_profile(f):
-                df = pd.read_csv(f) if f.name.endswith('.csv') else pd.read_excel(f)
-                num_cols = df.select_dtypes(include=[np.number]).columns
-                series = df[num_cols[1]] if len(num_cols) > 1 else df[num_cols[0]]
-                return series.values[:8760].astype(float)
-
-            with st.spinner("Reading profiles..."):
-                pv_raw   = read_profile(pv_file)
-                wind_raw = read_profile(wind_file)
-            st.success(f"✓ PV: {len(pv_raw):,} hrs | Max: {pv_raw.max():.1f} MW")
-            st.success(f"✓ Wind: {len(wind_raw):,} hrs | Max: {wind_raw.max():.1f} MW")
-
-            cfg = SystemConfig(
-                electrolyzer_capacity_mw=elec_mw,
-                hydro_power_mw=hydro_mw,
-                bess_max_power_mw=bess_pwr_mw,
-                bess_charge_eff=bess_chg,
-                bess_discharge_eff=bess_dis,
-                h2_conversion_factor=h2_factor,
-            )
-
-            total_runs = len(bess_sizes) * len(pv_cases)
-            pbar = st.progress(0)
-            status = st.empty()
-            run_count = [0]
-
-            def progress_cb(idx, total, bess_sz):
-                run_count[0] += 1
-                pct = int(run_count[0] / total_runs * 100)
-                pbar.progress(pct)
-                status.text(f"Running BESS {int(bess_sz):,} MWh... ({run_count[0]}/{total_runs})")
-
-            pv_results = run_pv_sensitivity(
-                pv_raw, wind_raw, bess_sizes, cfg, pv_cases, pv_ref_mw, progress_cb
-            )
-
-            status.text("Running baseline (no BESS)...")
-            baseline = {}
-            for lbl, pv_mw in pv_cases.items():
-                scale = pv_mw / pv_ref_mw
-                _, summary = run_dispatch(pv_raw * scale, wind_raw, 0.0, cfg)
-                baseline[f"{int(pv_mw)} MW"] = summary
-
-            pbar.progress(100)
-            status.text("✅ Complete!")
-
-            st.session_state.pv_results = pv_results
-            st.session_state.baseline = baseline
-            st.session_state.analysis_complete = True
-            st.session_state.hourly_cache = {lbl: data['hourly'] for lbl, data in pv_results.items()}
-
-            st.success(f"✅ {total_runs} scenarios processed")
-            st.balloons()
-            st.info("👉 Go to **Results** or **Dispatch** tabs")
-
-        except Exception as e:
-            st.error(f"❌ Error: {str(e)}")
-            st.exception(e)
-
-with tab_results:
-    if not st.session_state.analysis_complete:
-        st.info("Run analysis first")
-    else:
-        pv_results = st.session_state.pv_results
-        baseline   = st.session_state.baseline
-
-        st.header("📊 Results")
-
-        # Best case per PV scenario
-        for lbl, data in pv_results.items():
-            df = data['summary']
-            best = df.loc[df['firm_cf_pct'].idxmax()]
-            st.markdown(f"**{lbl}** — Best: **{best['firm_cf_pct']:.2f}% CF** @ {int(best['bess_size_mwh']):,} MWh BESS | Curtailment: {best['curtailment_pct']:.2f}%")
-        
-        st.markdown("---")
-        
-        # ══════════════════════════════════════════════════════════════════════
-        # CHART: System Performance vs Battery Size
-        # ══════════════════════════════════════════════════════════════════════
-
-        # Excel export
-        st.subheader("📥 Download Results")
-        col1, col2, col3 = st.columns([2, 1, 2])
-        with col2:
-            if st.button("📥 Prepare Excel", type="primary", use_container_width=True):
-                with st.spinner("Building Excel..."):
-                    out = BytesIO()
-                    with pd.ExcelWriter(out, engine='openpyxl') as writer:
-                        summary_tbl.to_excel(writer, sheet_name='Summary', index=False)
-                        
-                        # Export 500 MWh hourly dispatch for ALL PV cases
-                        hourly_cache = st.session_state.get('hourly_cache', {})
-                        for pv_label in hourly_cache.keys():
-                            if 500.0 in hourly_cache[pv_label]:
-                                df_500 = hourly_cache[pv_label][500.0]
-                                sheet_name = f"{pv_label.replace(' ', '_')}_500MWh"[:31]
-                                df_500.to_excel(writer, sheet_name=sheet_name, index=False)
-                        
-                        # Also export each PV case's full summary
-                        for pv_lbl, data in pv_results.items():
-                            sheet = pv_lbl[:28].replace(' ', '_').replace('/', '_')
-                            data['summary'].to_excel(writer, sheet_name=sheet, index=False)
-                    out.seek(0)
-                    st.session_state['excel_ready'] = out
-
-        if 'excel_ready' in st.session_state:
-            col1b, col2b, col3b = st.columns([2, 1, 2])
-            with col2b:
-                st.download_button(
-                    "⬇️ Download Excel",
-                    data=st.session_state['excel_ready'],
-                    file_name="firm_power_analysis.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    use_container_width=True, type="secondary"
-                )
-
-with tab_dispatch:
-    if not st.session_state.analysis_complete:
-        st.info("Run analysis first")
-    else:
-        st.header("📈 Dispatch Profiles")
-        hourly_cache = st.session_state.get('hourly_cache', {})
-        if not hourly_cache:
-            st.warning("No hourly data")
-        else:
-            col1, col2 = st.columns(2)
-            with col1:
-                pv_choice = st.selectbox("PV Case:", list(hourly_cache.keys()))
-            with col2:
-                bess_choice = st.selectbox("BESS Size (MWh):", sorted(hourly_cache[pv_choice].keys()), format_func=lambda x: f"{int(x):,} MWh")
-
-            hourly_df = hourly_cache[pv_choice][bess_choice]
-            typical, low = get_representative_days(hourly_df)
-
-            st.subheader("📅 Typical Day")
-            fig_typ = chart_dispatch_profile(typical, f"Typical Day — {pv_choice} | {int(bess_choice):,} MWh BESS", elec_mw)
-            st.plotly_chart(fig_typ, use_container_width=True)
-            st.caption("Median renewable generation day")
-            st.markdown("---")
-
-            st.subheader("⚠️ Low Renewable Period")
-            fig_low = chart_dispatch_profile(low, f"Low Renewable Period — {pv_choice} | {int(bess_choice):,} MWh BESS", elec_mw)
-            st.plotly_chart(fig_low, use_container_width=True)
-            st.caption("10th percentile renewable day — shows system limitation")
-            st.markdown("---")
-
-            # Operational breakdown
-            st.subheader("⚡ Operational Breakdown")
-            mode_counts = hourly_df['Operation_Mode'].value_counts()
-            met = {
-                'FIRM': mode_counts.get('FIRM', 0),
-                'SUPPLEMENTAL': mode_counts.get('SUPPLEMENTAL', 0),
-                'SHUTDOWN': mode_counts.get('SHUTDOWN', 0),
-            }
-            c1, c2, c3, c4 = st.columns(4)
-            with c1:
-                st.metric("FIRM Hours", f"{met['FIRM']:,}", f"{met['FIRM']/8760*100:.1f}%")
-            with c2:
-                st.metric("SUPPLEMENTAL", f"{met['SUPPLEMENTAL']:,}", f"{met['SUPPLEMENTAL']/8760*100:.1f}%")
-            with c3:
-                st.metric("SHUTDOWN", f"{met['SHUTDOWN']:,}", f"{met['SHUTDOWN']/8760*100:.1f}%")
-            with c4:
-                cf_avg = hourly_df['Capacity_Factor_%'].mean()
-                st.metric("Avg CF", f"{cf_avg:.2f}%")
-
-st.markdown("---")
-st.markdown('<div style="text-align:center;color:#999">Firm Power Optimization Tool v1.1 | HSO Team</div>', unsafe_allow_html=True)
