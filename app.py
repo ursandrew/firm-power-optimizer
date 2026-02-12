@@ -1,11 +1,8 @@
 """
-FIRM POWER OPTIMIZATION TOOL
-=============================
-Streamlit app - VBA BESS Sensitivity Analysis (Python translation)
-Finschhafen Green Energy Hub - Technical Assessment
-
-v1.1 - Clean terminology: "Capacity Factor" only (internally = firm_cf_pct)
-v1.1 - Export hourly dispatch for 500 MWh BESS across all PV cases
+FIRM POWER OPTIMIZATION TOOL v2.0
+==================================
+Styled to match Energy Modeling Optimizer
+UX improvements: organized sidebar, search space display, 2-chart results
 """
 
 import streamlit as st
@@ -23,6 +20,9 @@ from firm_power_charts import (
     build_summary_table
 )
 
+# ══════════════════════════════════════════════════════════════════════════════
+# PAGE CONFIG - Energy Modeling Optimizer Style
+# ══════════════════════════════════════════════════════════════════════════════
 st.set_page_config(
     page_title="Firm Power Optimization",
     page_icon="⚡",
@@ -30,16 +30,39 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-st.markdown(
-    '<p style="font-size:2.2rem;font-weight:bold;color:#1565C0;text-align:center">'
-    '⚡ Firm Power Optimization Tool</p>',
-    unsafe_allow_html=True
-)
-st.markdown(
-    '<p style="text-align:center;color:#666">BESS Sensitivity Analysis | '
-    'Three-Tier Dispatch: FIRM → SUPPLEMENTAL → SHUTDOWN</p>',
-    unsafe_allow_html=True
-)
+# Custom CSS - Match Energy Modeling Optimizer background
+st.markdown("""
+<style>
+    .main {
+        background-color: #f5f7fa;
+    }
+    .stApp {
+        background-color: #f5f7fa;
+    }
+    h1, h2, h3 {
+        color: #1976D2;
+    }
+    .metric-card {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Header with logo
+col_logo, col_title = st.columns([1, 8])
+with col_logo:
+    st.markdown('<p style="font-size:3rem;">⚡</p>', unsafe_allow_html=True)
+with col_title:
+    st.markdown(
+        '<p style="font-size:2rem;font-weight:bold;color:#1976D2;margin-top:10px">'
+        'Firm Power Optimization Tool</p>',
+        unsafe_allow_html=True
+    )
+    st.caption("Three-Tier Dispatch: PV + Wind + Hydro + BESS | FIRM → SUPPLEMENTAL → SHUTDOWN")
+
 st.markdown("---")
 
 # Session state
@@ -47,70 +70,492 @@ if 'analysis_complete' not in st.session_state:
     st.session_state.analysis_complete = False
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SIDEBAR
+# SIDEBAR - ORGANIZED BY COMPONENT (Like Energy Modeling Optimizer)
 # ══════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
-    st.header("⚙️ Configuration")
-
-    st.subheader("📁 Generation Profiles")
-    pv_file   = st.file_uploader("PV Profile (MW, 8760 hrs)", type=['csv', 'xlsx'], key='pv')
-    wind_file = st.file_uploader("Wind Profile (MW, 8760 hrs)", type=['csv', 'xlsx'], key='wind')
-    if pv_file:
-        st.success(f"✓ {pv_file.name}")
-    if wind_file:
-        st.success(f"✓ {wind_file.name}")
-
+    st.markdown("### 🔧 System Configuration")
     st.markdown("---")
-    st.subheader("🏗️ System Parameters")
-    col1, col2 = st.columns(2)
-    with col1:
-        elec_mw = st.number_input("Firm Power (MW)", value=500, min_value=50, max_value=2000, step=50)
-        hydro_mw = st.number_input("Hydro (MW)", value=250, min_value=0, max_value=1000, step=50)
-    with col2:
-        bess_pwr_mw = st.number_input("BESS Power (MW)", value=500, min_value=50, max_value=2000, step=50)
-        h2_factor = st.number_input("H₂ (kWh/kg)", value=50.0, min_value=30.0, max_value=80.0, step=1.0)
-
-    col3, col4 = st.columns(2)
-    with col3:
-        bess_chg = st.number_input("Charge (%)", value=90.0, min_value=50.0, max_value=100.0, step=0.5) / 100
-    with col4:
-        bess_dis = st.number_input("Discharge (%)", value=90.0, min_value=50.0, max_value=100.0, step=0.5) / 100
-
+    
+    # ══════════════════════════════════════════════════════════════════════════
+    # SOLAR PV SECTION
+    # ══════════════════════════════════════════════════════════════════════════
+    with st.expander("☀️ SOLAR PV", expanded=False):
+        st.markdown("**Capacity Range**")
+        pv_case_input = st.text_area(
+            "PV Cases (Label: MW per line)",
+            value="1000 MW PV: 1000\n500 MW PV: 500",
+            height=80,
+            help="Define multiple PV capacity cases for sensitivity analysis"
+        )
+        pv_cases = {}
+        for line in pv_case_input.strip().splitlines():
+            if ':' in line:
+                label, mw = line.split(':', 1)
+                try:
+                    pv_cases[label.strip()] = float(mw.strip())
+                except ValueError:
+                    pass
+        if not pv_cases:
+            pv_cases = {"1000 MW PV": 1000.0, "500 MW PV": 500.0}
+        
+        st.markdown("**Generation Profile Upload**")
+        pv_file = st.file_uploader(
+            "Upload PV Profile (8760 hours)",
+            type=['csv', 'xlsx'],
+            key='pv_profile',
+            help="Hourly PV generation profile in MW"
+        )
+        if pv_file:
+            st.success(f"✓ {pv_file.name}")
+        
+        pv_ref_mw = st.number_input(
+            "Profile Reference Capacity (MW)",
+            value=1000.0,
+            min_value=1.0,
+            help="The MW capacity your uploaded profile represents"
+        )
+    
+    # ══════════════════════════════════════════════════════════════════════════
+    # WIND SECTION
+    # ══════════════════════════════════════════════════════════════════════════
+    with st.expander("💨 WIND", expanded=False):
+        wind_capacity = st.number_input(
+            "Wind Capacity (MW)",
+            value=1104.0,
+            min_value=0.0,
+            step=50.0,
+            help="Total installed wind capacity"
+        )
+        
+        st.markdown("**Generation Profile Upload**")
+        wind_file = st.file_uploader(
+            "Upload Wind Profile (8760 hours)",
+            type=['csv', 'xlsx'],
+            key='wind_profile',
+            help="Hourly wind generation profile in MW"
+        )
+        if wind_file:
+            st.success(f"✓ {wind_file.name}")
+    
+    # ══════════════════════════════════════════════════════════════════════════
+    # HYDRO SECTION
+    # ══════════════════════════════════════════════════════════════════════════
+    with st.expander("💧 HYDRO", expanded=False):
+        hydro_mw = st.number_input(
+            "Hydro Baseload (MW)",
+            value=250.0,
+            min_value=0.0,
+            max_value=1000.0,
+            step=50.0,
+            help="Constant 24/7 hydro firm output"
+        )
+        st.caption("ℹ️ Run-of-river hydro provides continuous baseload (Tier 2 threshold)")
+    
+    # ══════════════════════════════════════════════════════════════════════════
+    # BESS SECTION
+    # ══════════════════════════════════════════════════════════════════════════
+    with st.expander("🔋 BATTERY STORAGE", expanded=False):
+        st.markdown("**BESS Capacity Sweep**")
+        bess_input = st.text_input(
+            "BESS Sizes (MWh, comma-separated)",
+            value="500, 1000, 1500, 2000, 2250, 2500, 3000, 3500",
+            help="Define BESS energy capacity scenarios to analyze"
+        )
+        try:
+            bess_sizes = [float(x.strip()) for x in bess_input.split(',') if x.strip()]
+        except ValueError:
+            bess_sizes = [500, 1000, 1500, 2000, 2250, 2500, 3000, 3500]
+            st.error("Invalid - using defaults")
+        
+        st.markdown("**BESS Parameters**")
+        col1, col2 = st.columns(2)
+        with col1:
+            bess_pwr_mw = st.number_input("Max Power (MW)", value=500, min_value=50, max_value=2000, step=50)
+            bess_chg = st.number_input("Charge Eff (%)", value=90.0, min_value=50.0, max_value=100.0, step=0.5) / 100
+        with col2:
+            bess_dis = st.number_input("Discharge Eff (%)", value=90.0, min_value=50.0, max_value=100.0, step=0.5) / 100
+    
+    # ══════════════════════════════════════════════════════════════════════════
+    # SYSTEM PARAMETERS
+    # ══════════════════════════════════════════════════════════════════════════
     st.markdown("---")
-    st.subheader("🔋 BESS Sensitivity")
-    bess_input = st.text_input("BESS Sizes (MWh, comma-separated)", value="500, 1000, 1500, 2000, 2250, 2500, 3000, 3500")
-    try:
-        bess_sizes = [float(x.strip()) for x in bess_input.split(',') if x.strip()]
-    except ValueError:
-        bess_sizes = [500, 1000, 1500, 2000, 2250, 2500, 3000, 3500]
-        st.error("Invalid input - using defaults")
-
-    st.markdown("---")
-    st.subheader("☀️ PV Capacity Cases")
-    pv_case_input = st.text_area("PV Cases (Label: MW per line)", value="1000 MW PV: 1000\n500 MW PV: 500", height=80)
-    pv_cases = {}
-    for line in pv_case_input.strip().splitlines():
-        if ':' in line:
-            label, mw = line.split(':', 1)
-            try:
-                pv_cases[label.strip()] = float(mw.strip())
-            except ValueError:
-                pass
-    if not pv_cases:
-        pv_cases = {"1000 MW PV": 1000.0, "500 MW PV": 500.0}
-
-    pv_ref_mw = st.number_input("Profile Reference (MW)", value=1000.0, min_value=1.0, help="The MW capacity your uploaded PV profile represents")
-
-    st.markdown("---")
-    can_run = pv_file is not None and wind_file is not None
-    if not can_run:
-        st.warning("Upload profiles to enable analysis")
-    run_btn = st.button("▶️ RUN ANALYSIS", type="primary", disabled=not can_run, use_container_width=True)
+    with st.expander("⚙️ SYSTEM PARAMETERS", expanded=False):
+        elec_mw = st.number_input(
+            "Firm Power Target (MW)",
+            value=500,
+            min_value=50,
+            max_value=2000,
+            step=50,
+            help="Electrolyzer / firm load target (Tier 1 threshold)"
+        )
+        h2_factor = st.number_input(
+            "H₂ Conversion (kWh/kg)",
+            value=50.0,
+            min_value=30.0,
+            max_value=80.0,
+            step=1.0,
+            help="Energy required per kg of hydrogen"
+        )
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TABS
 # ══════════════════════════════════════════════════════════════════════════════
-tab_home, tab_run, tab_results, tab_dispatch = st.tabs(["🏠 Home", "⚙️ Run", "📊 Results", "📈 Dispatch"])
+tab_home, tab_run, tab_results, tab_dispatch = st.tabs([
+    "🏠 Home", "▶️ Run", "📊 Results", "📈 Dispatch"
+])
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 1: HOME - SHOW SEARCH SPACE
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_home:
+    st.header("Firm Power Optimization Tool")
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        st.markdown("""
+        ### 🎯 Purpose
+        Assess Battery Energy Storage System (BESS) sizing for firm power delivery:
+        
+        **System Components:**
+        - **Hydro**: Constant baseload (run-of-river, 24/7)
+        - **PV**: Variable solar (multiple capacity scenarios)
+        - **Wind**: Variable wind generation
+        - **BESS**: Energy storage sensitivity sweep
+        
+        **Three-Tier Dispatch Logic:**
+        | Tier | Condition | Output |
+        |------|-----------|--------|
+        | **FIRM** | Hydro+RE+BESS ≥ Target | Full firm power |
+        | **SUPPLEMENTAL** | Hydro ≥ 250 MW | Hydro baseload only |
+        | **SHUTDOWN** | Hydro < 250 MW | Zero output |
+        """)
+    
+    with col2:
+        st.markdown("""
+        ### 📊 Analysis Outputs
+        - **Capacity Factor** vs BESS size (multiple PV cases)
+        - **Plant Scaling** analysis (firm power vs system sizing)
+        - **Dispatch profiles** (typical & low-renewable days)
+        - **Curtailment analysis** across BESS sizes
+        - **Full hourly dispatch** (Excel export)
+        
+        ### 📁 Required Inputs
+        Upload in **sidebar** → **☀️ Solar PV** & **💨 Wind** sections:
+        - PV generation profile (CSV/XLSX, 8760 hours)
+        - Wind generation profile (CSV/XLSX, 8760 hours)
+        """)
+    
+    st.markdown("---")
+    
+    # ══════════════════════════════════════════════════════════════════════════
+    # SEARCH SPACE DISPLAY (Like Energy Modeling Optimizer)
+    # ══════════════════════════════════════════════════════════════════════════
+    st.markdown("### 🔍 Current Configuration")
+    
+    pv_options = len(pv_cases)
+    wind_options = 1  # Fixed wind capacity
+    hydro_options = 1  # Fixed hydro
+    bess_options = len(bess_sizes)
+    total_combinations = pv_options * bess_options
+    
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+        st.metric("PV Options", pv_options, f"{min(pv_cases.values()):.0f}-{max(pv_cases.values()):.0f} MW")
+        st.markdown('</div>', unsafe_allow_html=True)
+    with col2:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+        st.metric("Wind Options", wind_options, f"{wind_capacity:.0f} MW")
+        st.markdown('</div>', unsafe_allow_html=True)
+    with col3:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+        st.metric("Hydro Options", hydro_options, f"{hydro_mw:.0f} MW")
+        st.markdown('</div>', unsafe_allow_html=True)
+    with col4:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+        st.metric("BESS Options", bess_options, f"{min(bess_sizes):.0f}-{max(bess_sizes):.0f} MWh")
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.info(f"**Total Search Space:** {total_combinations:,} scenarios "
+            f"({pv_options} PV cases × {bess_options} BESS sizes)")
+    
+    st.markdown("**Enabled Components:**")
+    st.success(f"☀️ Solar PV + 💨 Wind + 💧 Hydro + 🔋 BESS")
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 2: RUN - RUN BUTTON MOVED HERE
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_run:
+    st.header("⚙️ Run Analysis")
+    
+    # Display configuration summary
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Firm Power Target", f"{elec_mw} MW")
+    with col2:
+        st.metric("Hydro Baseload", f"{hydro_mw} MW")
+    with col3:
+        st.metric("PV Cases", len(pv_cases))
+    with col4:
+        st.metric("BESS Scenarios", len(bess_sizes))
+    
+    st.markdown("**PV capacity cases:**")
+    for lbl, mw in pv_cases.items():
+        st.write(f"- {lbl}: {mw:,.0f} MW")
+    
+    st.markdown(f"**BESS sweep:** {', '.join([f'{int(b):,} MWh' for b in bess_sizes])}")
+    
+    st.markdown("---")
+    
+    # Validation
+    can_run = (pv_file is not None) and (wind_file is not None)
+    if not can_run:
+        st.warning("⚠️ Upload PV and Wind profiles in sidebar to enable analysis")
+    
+    # RUN BUTTON
+    col_left, col_center, col_right = st.columns([2, 1, 2])
+    with col_center:
+        run_btn = st.button(
+            "▶️ RUN ANALYSIS",
+            type="primary",
+            disabled=not can_run,
+            use_container_width=True
+        )
+    
+    if run_btn:
+        try:
+            def read_profile(f):
+                df = pd.read_csv(f) if f.name.endswith('.csv') else pd.read_excel(f)
+                num_cols = df.select_dtypes(include=[np.number]).columns
+                series = df[num_cols[1]] if len(num_cols) > 1 else df[num_cols[0]]
+                return series.values[:8760].astype(float)
+            
+            with st.spinner("📊 Reading profiles..."):
+                pv_raw = read_profile(pv_file)
+                wind_raw = read_profile(wind_file)
+            
+            st.success(f"✓ PV: {len(pv_raw):,} hrs | Max: {pv_raw.max():.1f} MW | Mean: {pv_raw.mean():.1f} MW")
+            st.success(f"✓ Wind: {len(wind_raw):,} hrs | Max: {wind_raw.max():.1f} MW | Mean: {wind_raw.mean():.1f} MW")
+            
+            cfg = SystemConfig(
+                electrolyzer_capacity_mw=elec_mw,
+                hydro_power_mw=hydro_mw,
+                bess_max_power_mw=bess_pwr_mw,
+                bess_charge_eff=bess_chg,
+                bess_discharge_eff=bess_dis,
+                h2_conversion_factor=h2_factor,
+                wind_capacity_mw=wind_capacity,
+            )
+            
+            total_runs = len(bess_sizes) * len(pv_cases)
+            pbar = st.progress(0)
+            status = st.empty()
+            run_count = [0]
+            
+            def progress_cb(idx, total, bess_sz):
+                run_count[0] += 1
+                pct = int(run_count[0] / total_runs * 100)
+                pbar.progress(pct)
+                status.text(f"⚙️ Running BESS {int(bess_sz):,} MWh... ({run_count[0]}/{total_runs})")
+            
+            pv_results = run_pv_sensitivity(
+                pv_raw, wind_raw, bess_sizes, cfg,
+                pv_cases, pv_ref_mw, progress_cb
+            )
+            
+            status.text("📊 Running baseline (no BESS)...")
+            baseline = {}
+            for lbl, pv_mw in pv_cases.items():
+                scale = pv_mw / pv_ref_mw
+                _, summary = run_dispatch(pv_raw * scale, wind_raw, 0.0, cfg)
+                baseline[f"{int(pv_mw)} MW"] = summary
+            
+            pbar.progress(100)
+            status.text("✅ Analysis complete!")
+            
+            st.session_state.pv_results = pv_results
+            st.session_state.baseline = baseline
+            st.session_state.analysis_complete = True
+            st.session_state.hourly_cache = {
+                lbl: data['hourly'] for lbl, data in pv_results.items()
+            }
+            
+            st.success(f"✅ **Analysis Complete!** {total_runs} scenarios processed")
+            st.balloons()
+            st.info("👉 Navigate to **📊 Results** or **📈 Dispatch** tabs to view results")
+            
+        except Exception as e:
+            st.error(f"❌ Error during analysis: {str(e)}")
+            st.exception(e)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 3: RESULTS - ONLY 2 ESSENTIAL CHARTS
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_results:
+    if not st.session_state.analysis_complete:
+        st.info("ℹ️ Complete analysis in **Run** tab first")
+    else:
+        pv_results = st.session_state.pv_results
+        baseline = st.session_state.baseline
+        
+        st.header("📊 Analysis Results")
+        
+        # Best case summary
+        for lbl, data in pv_results.items():
+            df = data['summary']
+            best = df.loc[df['firm_cf_pct'].idxmax()]
+            st.markdown(
+                f"**{lbl}** — Best CF: **{best['firm_cf_pct']:.2f}%** "
+                f"@ {int(best['bess_size_mwh']):,} MWh BESS | "
+                f"Curtailment: {best['curtailment_pct']:.2f}%"
+            )
+        
+        st.markdown("---")
+        
+        # ══════════════════════════════════════════════════════════════════════
+        # CHART 1: Performance Comparison Across PV Capacities (slide 155)
+        # ══════════════════════════════════════════════════════════════════════
+        st.subheader("📈 Performance Comparison Across PV Capacities")
+        st.caption("Capacity Factor (%) vs BESS Size for multiple PV scenarios")
+        fig_cf = chart_cf_vs_bess(pv_results)
+        st.plotly_chart(fig_cf, use_container_width=True)
+        
+        st.markdown("---")
+        
+        # ══════════════════════════════════════════════════════════════════════
+        # CHART 2: Firm Power Output vs Plant Sizing (slide 157)
+        # ══════════════════════════════════════════════════════════════════════
+        st.subheader("🏗️ Firm Power Output vs Plant Sizing")
+        st.caption("System scaling analysis - Days with 24h full output & operating hours")
+        fig_days = chart_days_vs_bess(pv_results)
+        st.plotly_chart(fig_days, use_container_width=True)
+        
+        st.markdown("---")
+        
+        # Summary table
+        st.subheader("📋 Detailed Results Table")
+        summary_tbl = build_summary_table(pv_results)
+        st.dataframe(summary_tbl, use_container_width=True, hide_index=True)
+        
+        st.markdown("---")
+        
+        # Excel export
+        st.subheader("📥 Download Results")
+        col1, col2, col3 = st.columns([2, 1, 2])
+        with col2:
+            if st.button("📥 Prepare Excel", type="primary", use_container_width=True):
+                with st.spinner("Building Excel report..."):
+                    out = BytesIO()
+                    with pd.ExcelWriter(out, engine='openpyxl') as writer:
+                        summary_tbl.to_excel(writer, sheet_name='Summary', index=False)
+                        
+                        # Export 500 MWh hourly for all PV cases
+                        hourly_cache = st.session_state.get('hourly_cache', {})
+                        for pv_label in hourly_cache.keys():
+                            if 500.0 in hourly_cache[pv_label]:
+                                df_500 = hourly_cache[pv_label][500.0]
+                                sheet_name = f"{pv_label.replace(' ', '_')}_500MWh"[:31]
+                                df_500.to_excel(writer, sheet_name=sheet_name, index=False)
+                        
+                        # Export full summary per PV case
+                        for pv_lbl, data in pv_results.items():
+                            sheet = pv_lbl[:28].replace(' ', '_')
+                            data['summary'].to_excel(writer, sheet_name=sheet, index=False)
+                    
+                    out.seek(0)
+                    st.session_state['excel_ready'] = out
+                    st.success("✅ Excel report ready for download")
+        
+        if 'excel_ready' in st.session_state:
+            col1b, col2b, col3b = st.columns([2, 1, 2])
+            with col2b:
+                st.download_button(
+                    "⬇️ Download Excel",
+                    data=st.session_state['excel_ready'],
+                    file_name="firm_power_analysis.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True,
+                    type="secondary"
+                )
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 4: DISPATCH PROFILES
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_dispatch:
+    if not st.session_state.analysis_complete:
+        st.info("ℹ️ Complete analysis in **Run** tab first")
+    else:
+        st.header("📈 Dispatch Profiles")
+        
+        hourly_cache = st.session_state.get('hourly_cache', {})
+        if not hourly_cache:
+            st.warning("No hourly data available")
+        else:
+            col1, col2 = st.columns(2)
+            with col1:
+                pv_choice = st.selectbox("PV Case:", list(hourly_cache.keys()))
+            with col2:
+                bess_choice = st.selectbox(
+                    "BESS Size (MWh):",
+                    sorted(hourly_cache[pv_choice].keys()),
+                    format_func=lambda x: f"{int(x):,} MWh"
+                )
+            
+            hourly_df = hourly_cache[pv_choice][bess_choice]
+            typical, low = get_representative_days(hourly_df)
+            
+            st.subheader("📅 Typical Day (Median Renewable Generation)")
+            fig_typ = chart_dispatch_profile(
+                typical,
+                f"Typical Day — {pv_choice} | {int(bess_choice):,} MWh BESS",
+                elec_mw
+            )
+            st.plotly_chart(fig_typ, use_container_width=True)
+            st.caption("Median renewable generation day selected from 365 daily totals")
+            
+            st.markdown("---")
+            
+            st.subheader("⚠️ Low Renewable Period (10th Percentile)")
+            fig_low = chart_dispatch_profile(
+                low,
+                f"Low Renewable Period — {pv_choice} | {int(bess_choice):,} MWh BESS",
+                elec_mw
+            )
+            st.plotly_chart(fig_low, use_container_width=True)
+            st.caption("Shows system limitation during extended low-resource periods")
+            
+            st.markdown("---")
+            
+            # Operational stats
+            st.subheader("⚡ Operational Breakdown")
+            mode_counts = hourly_df['Operation_Mode'].value_counts()
+            met = {
+                'FIRM': mode_counts.get('FIRM', 0),
+                'SUPPLEMENTAL': mode_counts.get('SUPPLEMENTAL', 0),
+                'SHUTDOWN': mode_counts.get('SHUTDOWN', 0),
+            }
+            
+            c1, c2, c3, c4 = st.columns(4)
+            with c1:
+                st.metric("FIRM Hours", f"{met['FIRM']:,}", f"{met['FIRM']/8760*100:.1f}%")
+            with c2:
+                st.metric("SUPPLEMENTAL Hours", f"{met['SUPPLEMENTAL']:,}", f"{met['SUPPLEMENTAL']/8760*100:.1f}%")
+            with c3:
+                st.metric("SHUTDOWN Hours", f"{met['SHUTDOWN']:,}", f"{met['SHUTDOWN']/8760*100:.1f}%")
+            with c4:
+                cf_avg = hourly_df['Capacity_Factor_%'].mean()
+                st.metric("Avg CF", f"{cf_avg:.2f}%")
+
+# Footer
+st.markdown("---")
+st.markdown(
+    '<div style="text-align:center;color:#999;font-size:0.9rem">'
+    'Firm Power Optimization Tool v2.0 | HSO Team | '
+    'Powered by Python + Streamlit'
+    '</div>',
+    unsafe_allow_html=True
+)
 
 with tab_home:
     st.header("Firm Power Optimization Tool")
