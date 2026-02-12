@@ -30,42 +30,107 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Minimal CSS to override dark mode + fix input fields
+# Complete CSS fix for all dark mode elements
 st.markdown("""
 <style>
-    /* Force light backgrounds */
+    /* ========== FORCE LIGHT THEME EVERYWHERE ========== */
+    
+    /* Main app and sidebar backgrounds */
     .stApp {
-        background-color: #f5f7fa;
+        background-color: #f5f7fa !important;
     }
     section[data-testid="stSidebar"] {
-        background-color: #ffffff;
+        background-color: #ffffff !important;
     }
     
-    /* Ensure text is dark */
+    /* Top header bar (above title) */
+    header[data-testid="stHeader"] {
+        background-color: #ffffff !important;
+    }
+    
+    /* All text dark */
     .stApp, .stApp * {
-        color: #262730;
+        color: #262730 !important;
     }
     
-    /* Fix sidebar input fields - light backgrounds */
+    /* ========== SIDEBAR INPUT FIELDS ========== */
+    
+    /* Text areas */
     section[data-testid="stSidebar"] textarea,
-    section[data-testid="stSidebar"] input,
     section[data-testid="stSidebar"] .stTextArea textarea,
-    section[data-testid="stSidebar"] .stTextInput input,
-    section[data-testid="stSidebar"] .stNumberInput input {
+    section[data-testid="stSidebar"] .stTextArea > div > div {
         background-color: #ffffff !important;
         color: #262730 !important;
         border: 1px solid #d0d0d0 !important;
     }
     
-    /* Fix file uploader */
-    section[data-testid="stSidebar"] .stFileUploader {
+    /* Number inputs */
+    section[data-testid="stSidebar"] input[type="number"],
+    section[data-testid="stSidebar"] .stNumberInput input,
+    section[data-testid="stSidebar"] .stNumberInput > div > div > input {
+        background-color: #ffffff !important;
+        color: #262730 !important;
+        border: 1px solid #d0d0d0 !important;
+    }
+    
+    /* Number input +/- buttons */
+    section[data-testid="stSidebar"] .stNumberInput button,
+    section[data-testid="stSidebar"] button[kind="secondary"] {
+        background-color: #f0f2f6 !important;
+        color: #262730 !important;
+        border: 1px solid #d0d0d0 !important;
+    }
+    
+    /* Text inputs */
+    section[data-testid="stSidebar"] .stTextInput input,
+    section[data-testid="stSidebar"] input[type="text"] {
+        background-color: #ffffff !important;
+        color: #262730 !important;
+        border: 1px solid #d0d0d0 !important;
+    }
+    
+    /* ========== FILE UPLOADER ========== */
+    
+    section[data-testid="stSidebar"] .stFileUploader,
+    section[data-testid="stSidebar"] .stFileUploader > div,
+    section[data-testid="stSidebar"] [data-testid="stFileUploadDropzone"] {
+        background-color: #f0f2f6 !important;
+        border: 2px dashed #d0d0d0 !important;
+    }
+    
+    section[data-testid="stSidebar"] .stFileUploader section {
         background-color: #f0f2f6 !important;
     }
     
-    /* Fix expander headers */
-    section[data-testid="stSidebar"] .streamlit-expanderHeader {
+    section[data-testid="stSidebar"] .stFileUploader button {
+        background-color: #ffffff !important;
+        color: #262730 !important;
+        border: 1px solid #d0d0d0 !important;
+    }
+    
+    /* ========== EXPANDER HEADERS ========== */
+    
+    section[data-testid="stSidebar"] .streamlit-expanderHeader,
+    section[data-testid="stSidebar"] details summary {
+        background-color: #e8eaf0 !important;
+        color: #262730 !important;
+        border: 1px solid #d0d0d0 !important;
+        border-radius: 4px !important;
+    }
+    
+    section[data-testid="stSidebar"] details {
+        border: none !important;
+    }
+    
+    /* ========== ENSURE ALL BUTTONS ARE LIGHT ========== */
+    
+    section[data-testid="stSidebar"] button {
         background-color: #f0f2f6 !important;
         color: #262730 !important;
+    }
+    
+    section[data-testid="stSidebar"] button:hover {
+        background-color: #e0e2e6 !important;
     }
 </style>
 """, unsafe_allow_html=True)
