@@ -169,8 +169,10 @@ st.markdown("""
 <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:4px">
     <svg width="52" height="52" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
         <rect width="52" height="52" rx="8" fill="#0047AB"/>
-        <text x="26" y="36" font-family="Arial,sans-serif" font-size="22"
-              font-weight="bold" fill="white" text-anchor="middle">SJ</text>
+        <text x="18" y="38" font-family="Arial,sans-serif" font-size="32"
+              font-weight="bold" fill="white" text-anchor="middle">S</text>
+        <text x="36" y="34" font-family="Arial,sans-serif" font-size="18"
+              font-weight="bold" fill="white" text-anchor="middle">J</text>
         <circle cx="38" cy="13" r="5" fill="#E63946"/>
     </svg>
     <p style="font-size:2.2rem;font-weight:bold;color:#1976D2;margin:0">
