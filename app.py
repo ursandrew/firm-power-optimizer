@@ -132,6 +132,33 @@ st.markdown("""
     section[data-testid="stSidebar"] button:hover {
         background-color: #e0e2e6 !important;
     }
+    
+    /* ========== FIX SELECTBOXES/DROPDOWNS ========== */
+    
+    .stSelectbox > div > div {
+        background-color: #ffffff !important;
+        color: #262730 !important;
+    }
+    
+    /* ========== FIX DATAFRAME TABLE ========== */
+    
+    .stDataFrame {
+        background-color: #ffffff !important;
+    }
+    
+    .stDataFrame table {
+        background-color: #ffffff !important;
+    }
+    
+    .stDataFrame th {
+        background-color: #f0f2f6 !important;
+        color: #262730 !important;
+    }
+    
+    .stDataFrame td {
+        background-color: #ffffff !important;
+        color: #262730 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -465,29 +492,34 @@ with tab_results:
         st.markdown("---")
         
         # ══════════════════════════════════════════════════════════════════════
-        # CHART 1: Performance Comparison
+        # CHART 1: System Performance vs Battery Size
         # ══════════════════════════════════════════════════════════════════════
         st.subheader("📈 System Performance vs Battery Size")
         st.caption("How capacity factor improves with larger battery storage for different solar capacities")
         fig_cf = chart_cf_vs_bess(pv_results)
-        st.plotly_chart(fig_cf, use_container_width=True)
+        st.plotly_chart(fig_cf, use_container_width=True, key='chart_cf_vs_bess')
         
         st.markdown("---")
         
         # ══════════════════════════════════════════════════════════════════════
-        # CHART 2: Operating Days Analysis
+        # CHART 2: Full-Power Operation Days
         # ══════════════════════════════════════════════════════════════════════
         st.subheader("🏗️ Full-Power Operation Days")
         st.caption("Days per year with continuous 24-hour full power operation and total operating hours")
         fig_days = chart_days_vs_bess(pv_results)
-        st.plotly_chart(fig_days, use_container_width=True)
+        st.plotly_chart(fig_days, use_container_width=True, key='chart_days_vs_bess')
         
         st.markdown("---")
         
-        # Summary table
+        # Summary table with light background
         st.subheader("📋 Detailed Results Table")
         summary_tbl = build_summary_table(pv_results)
-        st.dataframe(summary_tbl, use_container_width=True, hide_index=True)
+        st.dataframe(
+            summary_tbl,
+            use_container_width=True,
+            hide_index=True,
+            key='summary_table'
+        )
         
         st.markdown("---")
         
@@ -545,12 +577,17 @@ with tab_dispatch:
         else:
             col1, col2 = st.columns(2)
             with col1:
-                pv_choice = st.selectbox("Solar PV Scenario:", list(hourly_cache.keys()))
+                pv_choice = st.selectbox(
+                    "Solar PV Scenario:",
+                    list(hourly_cache.keys()),
+                    key='dispatch_pv_choice'
+                )
             with col2:
                 bess_choice = st.selectbox(
                     "Battery Size:",
                     sorted(hourly_cache[pv_choice].keys()),
-                    format_func=lambda x: f"{int(x):,} MWh"
+                    format_func=lambda x: f"{int(x):,} MWh",
+                    key='dispatch_bess_choice'
                 )
             
             hourly_df = hourly_cache[pv_choice][bess_choice]
@@ -562,7 +599,7 @@ with tab_dispatch:
                 f"Typical Day — {pv_choice} | {int(bess_choice):,} MWh Battery",
                 elec_mw
             )
-            st.plotly_chart(fig_typ, use_container_width=True)
+            st.plotly_chart(fig_typ, use_container_width=True, key='chart_dispatch_typical')
             st.caption("Representative day with median renewable energy generation")
             
             st.markdown("---")
@@ -573,7 +610,7 @@ with tab_dispatch:
                 f"Challenging Day — {pv_choice} | {int(bess_choice):,} MWh Battery",
                 elec_mw
             )
-            st.plotly_chart(fig_low, use_container_width=True)
+            st.plotly_chart(fig_low, use_container_width=True, key='chart_dispatch_low')
             st.caption("Day with low renewable energy generation (10th percentile) — shows system limitations")
             
             st.markdown("---")
