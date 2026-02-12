@@ -15,7 +15,8 @@ from firm_power_dispatch import (
     run_pv_sensitivity, get_representative_days
 )
 from firm_power_charts import (
-    chart_dispatch_profile, chart_cf_vs_bess, chart_system_scaling,
+    chart_cf_vs_bess,
+    chart_dispatch_profile,
     build_summary_table
 )
 
@@ -161,33 +162,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Header with corrected SJ logo
-col_logo, col_title = st.columns([1, 8])
-with col_logo:
-    st.markdown("""
-    <svg width="60" height="60" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <!-- Blue background -->
-        <rect width="100" height="100" rx="12" fill="#0047AB"/>
-        
-        <!-- Large S (takes up most of the space) -->
-        <text x="25" y="72" font-family="Arial,sans-serif" font-size="65"
-              font-weight="bold" fill="white" text-anchor="middle">S</text>
-        
-        <!-- Smaller j with red dot -->
-        <text x="70" y="72" font-family="Arial,sans-serif" font-size="42"
-              font-weight="bold" fill="white" text-anchor="middle">J</text>
-        
-        <!-- Red accent dot -->
-        <circle cx="85" cy="20" r="8" fill="#E63946"/>
-    </svg>
-    """, unsafe_allow_html=True)
-with col_title:
-    st.markdown(
-        '<p style="font-size:2rem;font-weight:bold;color:#1976D2;margin-top:10px">'
-        'Firm Power Optimization Tool</p>',
-        unsafe_allow_html=True
-    )
-    st.caption("Hybrid Renewable Energy System Analysis: PV + Wind + Hydro + Battery Storage")
+# Header
+st.markdown(
+    '<p style="font-size:2.2rem;font-weight:bold;color:#1976D2;margin-bottom:5px">'
+    '⚡ Firm Power Optimization Tool</p>',
+    unsafe_allow_html=True
+)
+st.caption("Hybrid Renewable Energy System Analysis: PV + Wind + Hydro + Battery Storage")
 
 st.markdown("---")
 
@@ -507,22 +488,12 @@ with tab_results:
         st.markdown("---")
         
         # ══════════════════════════════════════════════════════════════════════
-        # CHART 1: System Performance vs Battery Size
+        # CHART: System Performance vs Battery Size
         # ══════════════════════════════════════════════════════════════════════
         st.subheader("📈 System Performance vs Battery Size")
         st.caption("How capacity factor improves with larger battery storage for different solar capacities")
         fig_cf = chart_cf_vs_bess(pv_results)
         st.plotly_chart(fig_cf, use_container_width=True, key='chart_cf_vs_bess')
-        
-        st.markdown("---")
-        
-        # ══════════════════════════════════════════════════════════════════════
-        # CHART 2: System Scaling Analysis
-        # ══════════════════════════════════════════════════════════════════════
-        st.subheader("🏗️ System Scaling Analysis")
-        st.caption("How renewable system components scale with effective electrolyzer capacity")
-        fig_scaling = chart_system_scaling(pv_results, elec_mw)
-        st.plotly_chart(fig_scaling, use_container_width=True, key='chart_system_scaling')
         
         st.markdown("---")
         
@@ -790,34 +761,12 @@ with tab_results:
             df = data['summary']
             best = df.loc[df['firm_cf_pct'].idxmax()]
             st.markdown(f"**{lbl}** — Best: **{best['firm_cf_pct']:.2f}% CF** @ {int(best['bess_size_mwh']):,} MWh BESS | Curtailment: {best['curtailment_pct']:.2f}%")
+        
         st.markdown("---")
-
-        # Chart 1: Baseline
-        st.subheader("📊 Baseline Performance: Without BESS")
-        if baseline:
-            st.plotly_chart(chart_baseline_without_bess(baseline), use_container_width=True)
-        st.markdown("---")
-
-        # Chart 2: CF vs BESS
-        st.subheader("📈 Capacity Factor vs BESS Size")
-        st.plotly_chart(chart_cf_vs_bess(pv_results), use_container_width=True)
-        st.markdown("---")
-
-        # Chart 3: Days
-        st.subheader("📅 Days of High Performance vs BESS Size")
-        st.plotly_chart(chart_days_vs_bess(pv_results), use_container_width=True)
-        st.markdown("---")
-
-        # Chart 4: Curtailment
-        st.subheader("✂️ Curtailment Analysis")
-        st.plotly_chart(chart_curtailment_vs_bess(pv_results), use_container_width=True)
-        st.markdown("---")
-
-        # Summary table
-        st.subheader("📋 Summary Table")
-        summary_tbl = build_summary_table(pv_results)
-        st.dataframe(summary_tbl, use_container_width=True, hide_index=True)
-        st.markdown("---")
+        
+        # ══════════════════════════════════════════════════════════════════════
+        # CHART: System Performance vs Battery Size
+        # ══════════════════════════════════════════════════════════════════════
 
         # Excel export
         st.subheader("📥 Download Results")
