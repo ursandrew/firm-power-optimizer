@@ -162,10 +162,17 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Header with logo
+# Header with SJ logo
 col_logo, col_title = st.columns([1, 8])
 with col_logo:
-    st.markdown('<p style="font-size:3rem;">⚡</p>', unsafe_allow_html=True)
+    st.markdown("""
+    <svg width="52" height="52" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+        <rect width="52" height="52" rx="8" fill="#0047AB"/>
+        <text x="26" y="36" font-family="Arial,sans-serif" font-size="22"
+              font-weight="bold" fill="white" text-anchor="middle">SJ</text>
+        <circle cx="38" cy="13" r="5" fill="#E63946"/>
+    </svg>
+    """, unsafe_allow_html=True)
 with col_title:
     st.markdown(
         '<p style="font-size:2rem;font-weight:bold;color:#1976D2;margin-top:10px">'
