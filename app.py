@@ -171,7 +171,7 @@ st.markdown("""
         <rect width="52" height="52" rx="0" fill="#0047AB"/>
         <text x="18" y="38" font-family="Arial,sans-serif" font-size="32"
               font-weight="bold" fill="white" text-anchor="middle">S</text>
-        <text x="36" y="38" font-family="Arial,sans-serif" font-size="18"
+        <text x="36" y="38" font-family="Arial,sans-serif" font-size="20"
               font-weight="bold" fill="white" text-anchor="middle">J</text>
         <circle cx="38" cy="18" r="4" fill="#E63946"/>
     </svg>
