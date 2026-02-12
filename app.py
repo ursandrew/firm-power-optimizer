@@ -30,7 +30,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Minimal CSS to override dark mode - only what's needed
+# Minimal CSS to override dark mode + fix input fields
 st.markdown("""
 <style>
     /* Force light backgrounds */
@@ -41,9 +41,31 @@ st.markdown("""
         background-color: #ffffff;
     }
     
-    /* Ensure text is dark (not white) */
+    /* Ensure text is dark */
     .stApp, .stApp * {
         color: #262730;
+    }
+    
+    /* Fix sidebar input fields - light backgrounds */
+    section[data-testid="stSidebar"] textarea,
+    section[data-testid="stSidebar"] input,
+    section[data-testid="stSidebar"] .stTextArea textarea,
+    section[data-testid="stSidebar"] .stTextInput input,
+    section[data-testid="stSidebar"] .stNumberInput input {
+        background-color: #ffffff !important;
+        color: #262730 !important;
+        border: 1px solid #d0d0d0 !important;
+    }
+    
+    /* Fix file uploader */
+    section[data-testid="stSidebar"] .stFileUploader {
+        background-color: #f0f2f6 !important;
+    }
+    
+    /* Fix expander headers */
+    section[data-testid="stSidebar"] .streamlit-expanderHeader {
+        background-color: #f0f2f6 !important;
+        color: #262730 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -209,54 +231,6 @@ tab_home, tab_run, tab_results, tab_dispatch = st.tabs([
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_home:
     st.header("Firm Power Optimization Tool")
-    
-    col1, col2 = st.columns([1, 1])
-    
-    with col1:
-        st.markdown("""
-        ### 🎯 What This Tool Does
-        
-        Analyzes how much battery storage is needed to deliver reliable, continuous power from renewable energy sources.
-        
-        **System Components:**
-        - **Hydro Power**: Constant baseload from run-of-river hydro (24/7)
-        - **Solar PV**: Variable generation during daylight hours
-        - **Wind Power**: Variable generation throughout the day
-        - **Battery Storage**: Stores excess energy and releases when needed
-        
-        **How It Works:**
-        
-        The system operates in three modes based on available power:
-        
-        1. **Full Power Mode** — All renewable sources + battery working together to meet target
-        2. **Reduced Power Mode** — Hydro only provides baseline power when renewables are insufficient
-        3. **Standby Mode** — System charges battery when hydro output is low
-        """)
-    
-    with col2:
-        st.markdown("""
-        ### 📊 What You'll Get
-        
-        **Performance Analysis:**
-        - How well the system meets power targets with different battery sizes
-        - Comparison of different solar panel capacities
-        - Days per year with full 24-hour operation
-        - Amount of excess energy that must be curtailed
-        
-        **Visual Reports:**
-        - Performance charts comparing battery sizes
-        - System scaling recommendations
-        - Hourly dispatch profiles for typical and challenging days
-        - Full operational data export to Excel
-        
-        ### 📁 What You Need
-        
-        Upload in **sidebar** → **☀️ Solar PV** & **💨 Wind** sections:
-        - Solar generation profile (8,760 hourly values for one year)
-        - Wind generation profile (8,760 hourly values for one year)
-        
-        Both files should be in CSV or Excel format with power values in MW.
-        """)
     
     st.markdown("---")
     
