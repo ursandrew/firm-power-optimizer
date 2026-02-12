@@ -173,7 +173,7 @@ st.markdown("""
               font-weight="bold" fill="white" text-anchor="middle">S</text>
         <text x="36" y="37" font-family="Arial,sans-serif" font-size="18"
               font-weight="bold" fill="white" text-anchor="middle">J</text>
-        <circle cx="38" cy="12" r="5" fill="#E63946"/>
+        <circle cx="38" cy="10" r="5" fill="#E63946"/>
     </svg>
     <p style="font-size:2.2rem;font-weight:bold;color:#1976D2;margin:0">
         Firm Power Optimization Tool
