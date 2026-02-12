@@ -341,8 +341,8 @@ with tab_home:
         - **PV**: Variable (500–1,000 MW sensitivity)
         - **Wind**: Variable (~1,104 MW)
         - **BESS**: Sensitivity sweep (500–3,500 MWh)
+        """)  
     
-    st.markdown("---")
     
     # ══════════════════════════════════════════════════════════════════════════
     # SEARCH SPACE DISPLAY
