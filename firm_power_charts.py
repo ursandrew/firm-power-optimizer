@@ -65,45 +65,45 @@ def chart_cf_vs_bess(pv_results: dict):
         ))
     
     fig.update_layout(
-        title=dict(
-            text='<b>System Performance vs Battery Size</b>',
-            font=dict(size=TITLE_SIZE, family=FONT_FAMILY, color='#1976D2'),
-            x=0.5,
-            xanchor='center'
-        ),
-        xaxis=dict(
-            title='<b>BESS Size (MWh)</b>',
-            titlefont=dict(size=AXIS_TITLE_SIZE, family=FONT_FAMILY),
-            tickfont=dict(size=AXIS_LABEL_SIZE, family=FONT_FAMILY),
-            showgrid=True,
-            gridcolor='#E0E0E0',
-            zeroline=False
-        ),
-        yaxis=dict(
-            title='<b>Capacity Factor (%)</b>',
-            titlefont=dict(size=AXIS_TITLE_SIZE, family=FONT_FAMILY),
-            tickfont=dict(size=AXIS_LABEL_SIZE, family=FONT_FAMILY),
-            showgrid=True,
-            gridcolor='#E0E0E0',
-            zeroline=False,
-            range=[80, 100]  # Fixed range for better visibility
-        ),
+        title={
+            'text': '<b>System Performance vs Battery Size</b>',
+            'font': {'size': TITLE_SIZE, 'family': FONT_FAMILY, 'color': '#1976D2'},
+            'x': 0.5,
+            'xanchor': 'center'
+        },
+        xaxis={
+            'title': '<b>BESS Size (MWh)</b>',
+            'titlefont': {'size': AXIS_TITLE_SIZE, 'family': FONT_FAMILY},
+            'tickfont': {'size': AXIS_LABEL_SIZE, 'family': FONT_FAMILY},
+            'showgrid': True,
+            'gridcolor': '#E0E0E0',
+            'zeroline': False
+        },
+        yaxis={
+            'title': '<b>Capacity Factor (%)</b>',
+            'titlefont': {'size': AXIS_TITLE_SIZE, 'family': FONT_FAMILY},
+            'tickfont': {'size': AXIS_LABEL_SIZE, 'family': FONT_FAMILY},
+            'showgrid': True,
+            'gridcolor': '#E0E0E0',
+            'zeroline': False,
+            'range': [80, 100]
+        },
         plot_bgcolor='white',
         paper_bgcolor='white',
         height=500,
         hovermode='x unified',
-        legend=dict(
-            orientation='h',
-            yanchor='bottom',
-            y=-0.25,
-            xanchor='center',
-            x=0.5,
-            bgcolor='rgba(255,255,255,0.9)',
-            bordercolor='#CCCCCC',
-            borderwidth=1,
-            font=dict(size=LEGEND_SIZE, family=FONT_FAMILY)
-        ),
-        margin=dict(l=80, r=40, t=80, b=100)
+        legend={
+            'orientation': 'h',
+            'yanchor': 'bottom',
+            'y': -0.25,
+            'xanchor': 'center',
+            'x': 0.5,
+            'bgcolor': 'rgba(255,255,255,0.9)',
+            'bordercolor': '#CCCCCC',
+            'borderwidth': 1,
+            'font': {'size': LEGEND_SIZE, 'family': FONT_FAMILY}
+        },
+        margin={'l': 80, 'r': 40, 't': 80, 'b': 100}
     )
     
     return fig
@@ -167,16 +167,16 @@ def chart_days_vs_bess(pv_results: dict):
     # Update axes
     fig.update_xaxes(
         title='<b>BESS Size (MWh)</b>',
-        titlefont=dict(size=AXIS_TITLE_SIZE, family=FONT_FAMILY),
-        tickfont=dict(size=AXIS_LABEL_SIZE, family=FONT_FAMILY),
+        titlefont={'size': AXIS_TITLE_SIZE, 'family': FONT_FAMILY},
+        tickfont={'size': AXIS_LABEL_SIZE, 'family': FONT_FAMILY},
         showgrid=True,
         gridcolor='#E0E0E0'
     )
     
     fig.update_yaxes(
         title='<b>Days with 24h Full Output</b>',
-        titlefont=dict(size=AXIS_TITLE_SIZE, family=FONT_FAMILY, color=COLORS['bars']),
-        tickfont=dict(size=AXIS_LABEL_SIZE, family=FONT_FAMILY),
+        titlefont={'size': AXIS_TITLE_SIZE, 'family': FONT_FAMILY, 'color': COLORS['bars']},
+        tickfont={'size': AXIS_LABEL_SIZE, 'family': FONT_FAMILY},
         showgrid=False,
         secondary_y=False,
         range=[0, 365]
@@ -184,8 +184,8 @@ def chart_days_vs_bess(pv_results: dict):
     
     fig.update_yaxes(
         title='<b>Operating Hours</b>',
-        titlefont=dict(size=AXIS_TITLE_SIZE, family=FONT_FAMILY, color=COLORS['line']),
-        tickfont=dict(size=AXIS_LABEL_SIZE, family=FONT_FAMILY),
+        titlefont={'size': AXIS_TITLE_SIZE, 'family': FONT_FAMILY, 'color': COLORS['line']},
+        tickfont={'size': AXIS_LABEL_SIZE, 'family': FONT_FAMILY},
         showgrid=True,
         gridcolor='#E0E0E0',
         secondary_y=True,
@@ -193,29 +193,29 @@ def chart_days_vs_bess(pv_results: dict):
     )
     
     fig.update_layout(
-        title=dict(
-            text='<b>Full-Power Operation Days</b>',
-            font=dict(size=TITLE_SIZE, family=FONT_FAMILY, color='#1976D2'),
-            x=0.5,
-            xanchor='center'
-        ),
+        title={
+            'text': '<b>Full-Power Operation Days</b>',
+            'font': {'size': TITLE_SIZE, 'family': FONT_FAMILY, 'color': '#1976D2'},
+            'x': 0.5,
+            'xanchor': 'center'
+        },
         plot_bgcolor='white',
         paper_bgcolor='white',
         height=500,
         barmode='group',
         bargap=0.2,
-        legend=dict(
-            orientation='h',
-            yanchor='bottom',
-            y=-0.3,
-            xanchor='center',
-            x=0.5,
-            bgcolor='rgba(255,255,255,0.9)',
-            bordercolor='#CCCCCC',
-            borderwidth=1,
-            font=dict(size=LEGEND_SIZE, family=FONT_FAMILY)
-        ),
-        margin=dict(l=80, r=80, t=80, b=120)
+        legend={
+            'orientation': 'h',
+            'yanchor': 'bottom',
+            'y': -0.3,
+            'xanchor': 'center',
+            'x': 0.5,
+            'bgcolor': 'rgba(255,255,255,0.9)',
+            'bordercolor': '#CCCCCC',
+            'borderwidth': 1,
+            'font': {'size': LEGEND_SIZE, 'family': FONT_FAMILY}
+        },
+        margin={'l': 80, 'r': 80, 't': 80, 'b': 120}
     )
     
     return fig
@@ -284,8 +284,8 @@ def chart_dispatch_profile(day_df, title_text, elec_mw):
     
     fig.update_xaxes(
         title='<b>Hours</b>',
-        titlefont=dict(size=AXIS_TITLE_SIZE, family=FONT_FAMILY),
-        tickfont=dict(size=AXIS_LABEL_SIZE, family=FONT_FAMILY),
+        titlefont={'size': AXIS_TITLE_SIZE, 'family': FONT_FAMILY},
+        tickfont={'size': AXIS_LABEL_SIZE, 'family': FONT_FAMILY},
         tickmode='linear',
         tick0=0,
         dtick=2,
@@ -296,8 +296,8 @@ def chart_dispatch_profile(day_df, title_text, elec_mw):
     
     fig.update_yaxes(
         title='<b>Power (MW)</b>',
-        titlefont=dict(size=AXIS_TITLE_SIZE, family=FONT_FAMILY),
-        tickfont=dict(size=AXIS_LABEL_SIZE, family=FONT_FAMILY),
+        titlefont={'size': AXIS_TITLE_SIZE, 'family': FONT_FAMILY},
+        tickfont={'size': AXIS_LABEL_SIZE, 'family': FONT_FAMILY},
         showgrid=True,
         gridcolor='#E0E0E0',
         secondary_y=False
@@ -305,36 +305,36 @@ def chart_dispatch_profile(day_df, title_text, elec_mw):
     
     fig.update_yaxes(
         title='<b>BESS SOC (%)</b>',
-        titlefont=dict(size=AXIS_TITLE_SIZE, family=FONT_FAMILY, color='#9C27B0'),
-        tickfont=dict(size=AXIS_LABEL_SIZE, family=FONT_FAMILY),
+        titlefont={'size': AXIS_TITLE_SIZE, 'family': FONT_FAMILY, 'color': '#9C27B0'},
+        tickfont={'size': AXIS_LABEL_SIZE, 'family': FONT_FAMILY},
         range=[0, 120],
         showgrid=False,
         secondary_y=True
     )
     
     fig.update_layout(
-        title=dict(
-            text=f'<b>{title_text}</b>',
-            font=dict(size=TITLE_SIZE, family=FONT_FAMILY, color='#1976D2'),
-            x=0.5,
-            xanchor='center'
-        ),
+        title={
+            'text': f'<b>{title_text}</b>',
+            'font': {'size': TITLE_SIZE, 'family': FONT_FAMILY, 'color': '#1976D2'},
+            'x': 0.5,
+            'xanchor': 'center'
+        },
         plot_bgcolor='white',
         paper_bgcolor='white',
         height=500,
         hovermode='x unified',
-        legend=dict(
-            orientation='h',
-            yanchor='bottom',
-            y=-0.25,
-            xanchor='center',
-            x=0.5,
-            bgcolor='rgba(255,255,255,0.9)',
-            bordercolor='#CCCCCC',
-            borderwidth=1,
-            font=dict(size=LEGEND_SIZE, family=FONT_FAMILY)
-        ),
-        margin=dict(l=80, r=80, t=80, b=100)
+        legend={
+            'orientation': 'h',
+            'yanchor': 'bottom',
+            'y': -0.25,
+            'xanchor': 'center',
+            'x': 0.5,
+            'bgcolor': 'rgba(255,255,255,0.9)',
+            'bordercolor': '#CCCCCC',
+            'borderwidth': 1,
+            'font': {'size': LEGEND_SIZE, 'family': FONT_FAMILY}
+        },
+        margin={'l': 80, 'r': 80, 't': 80, 'b': 100}
     )
     
     return fig
